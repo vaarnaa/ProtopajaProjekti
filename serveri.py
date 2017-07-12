@@ -10,6 +10,7 @@ import smtplib
 
 check = 'abc'
 
+
 # Luo taulukon jos sellaista ei ole:
 def create_table():
     c.execute('CREATE TABLE IF NOT EXISTS dataToStore (datestamp TEXT, name TEXT, value REAL)')
@@ -21,6 +22,7 @@ def data_tietokantaan(data_list):
     date = str(dt.datetime.fromtimestamp(unix).strftime("%d-%m-%Y %H:%M:%S"))
     c.execute("INSERT INTO dataToStore (datestamp, name, value) VALUES (?, ?, ?)", (date, str(data_list[1]), int(data_list[2])))
     conn.commit()
+
 
 # Lahetetaan annetun laitteen kayttajalle email:
 def send_email(laiteID):
@@ -39,7 +41,6 @@ def send_email(laiteID):
         print("Mail sent")
     except:
         print("Failed to send mail")
-
 
 
 try:
@@ -68,23 +69,28 @@ while True:
     print("Got a connection from: " + str(client_address[0]) + " " + str(client_address[1]))
 
     data = connection.recv(4096)
-    data = data.decode()
-    print("Data from client: " + data)
+    try:
+        data = data.decode()
+        print("Data from client: " + data)
 
-    # Pilkotaan vastaan otettu merkkijono listaan:
-    data_lista = data.split(",")
+        # Pilkotaan vastaan otettu merkkijono listaan:
+        data_lista = data.split(",")
 
-    # Siirretaan listan alkiot tietokantaan, jonka jalkeen suljetaan yhteydet:
-    if str(data_lista[0]) == check:
-        conn = sqlite3.connect('testi.db')
-        c = conn.cursor()
-        create_table()
-        data_tietokantaan(data_lista)
-        print("Data saved, closing connection")
-        c.close()
-        conn.close()
-        connection.close()
+        # Siirretaan listan alkiot tietokantaan, jonka jalkeen suljetaan yhteydet:
+        if str(data_lista[0]) == check:
+            conn = sqlite3.connect('testi.db')
+            c = conn.cursor()
+            create_table()
+            data_tietokantaan(data_lista)
+            print("Data saved, closing connection")
+            c.close()
+            conn.close()
+            connection.close()
+        else:
+            print("Wrong data, closing connection")
+            connection.close()
 
-    else:
-        print("Wrong data, closing connection")
+    except UnicodeError as err:
+        print("Failed to decode data: {0}".format(err))
+        print("Closing connection")
         connection.close()
