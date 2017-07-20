@@ -55,7 +55,7 @@ def send_email():
         logger.debug("Failed to send mail")
 
 # main funktio:
-if __name__ == '__main__':
+def main():
 
     try:
         sokettis = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -122,3 +122,6 @@ if __name__ == '__main__':
             print("Failed to split data: {0}".format(err))
             logger.error(err)
             connection.close()
+            
+if __name__ == '__main__':
+    main()
