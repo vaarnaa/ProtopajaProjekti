@@ -69,7 +69,7 @@ def call_user():
     logger.debug(call.sid)
 
 # main funktio:
-if __name__ == '__main__':
+def main():
 
     CreateDB.init_db()  # Luo tietokannan jos sita ei ole
     try:
@@ -137,3 +137,6 @@ if __name__ == '__main__':
             print("Failed to split data: {0}".format(err))
             logger.error(err)
             connection.close()
+            
+if __name__ == '__main__':
+    main()
