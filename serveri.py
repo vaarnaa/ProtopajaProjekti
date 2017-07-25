@@ -14,14 +14,13 @@ import logging
 # pip install twilio
 from twilio.rest import Client
 
-# Omasta tiedostoista:
+# Omasta tiedostosta:
 from Credentials import PASSWD, SENDER  # Gmail-kayttajan tiedot
 from Credentials import ACCOUNT_SID, AUTH_TOKEN, TWLO_NUM, TWLO_URL  # Twilio-kayttajan tiedot
 from Credentials import HOSTNAME, PORT
+from Credentials import CHECK  # Vastaanotettavan datan tarkastus
 import CreateDB  # Kaytetaan tietokannan luomiseen
 
-# Datan tarkastusmuuttuja:
-check = 'abc'
 
 # Loggauksen formaatti:
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'  # Vuosi-kuukausi-paiva
@@ -68,6 +67,7 @@ def call_user():
     call = client.calls.create(to='', from_=TWLO_NUM, url=TWLO_URL)  # to= Haetaan laitteen vuokraajan puh.numero tietokannasta
     logger.debug(call.sid)
 
+
 # main funktio:
 def main():
 
@@ -108,7 +108,7 @@ def main():
             data_list = data.split(",")
 
             # Siirretaan listan alkiot tietokantaan, jonka jalkeen suljetaan yhteydet:
-            if str(data_list[0]) == check:
+            if str(data_list[0]) == CHECK:
                 conn = sqlite3.connect('PROTO.db')
                 c = conn.cursor()
                 data_to_db(c, conn, data_list)
