@@ -1,5 +1,8 @@
 # Serveri.py file
 
+"""Testattu Python 3.5:lla. Vaatii Python 3.3(?) tai sita uudemman version."""
+
+# Standard libraries:
 import socket
 import sys
 import datetime as dt
@@ -8,12 +11,22 @@ import time
 import smtplib
 import logging
 
+# pip install twilio
+from twilio.rest import Client
+
+# Omasta tiedostoista:
+from Credentials import PASSWD, SENDER  # Gmail-kayttajan tiedot
+from Credentials import ACCOUNT_SID, AUTH_TOKEN, TWLO_NUM, TWLO_URL  # Twilio-kayttajan tiedot
+from Credentials import HOSTNAME, PORT
+import CreateDB  # Kaytetaan tietokannan luomiseen
+
 # Datan tarkastusmuuttuja:
 check = 'abc'
 
 # Loggauksen formaatti:
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S'  # Vuosi-kuukausi-paiva
 LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
-DATE_FORMAT = '%d-%m-%Y %H:%M:%S'
+
 logging.basicConfig(filename="logfile.log",
                     level=logging.DEBUG,
                     format=LOG_FORMAT,
@@ -22,41 +35,43 @@ logging.basicConfig(filename="logfile.log",
 logger = logging.getLogger()
 
 
-# Luo taulukon jos sellaista ei ole:
-def create_table():
-    c.execute('CREATE TABLE IF NOT EXISTS dataToStore (datestamp TEXT, name TEXT, value REAL)')
-
-
-# Asettaa annetun listan alkiot tietokantaan:
-def data_tietokantaan(data_list):
+# Asettaa annetun listan alkiot tietokannan Mittaukset-taulukkoon:
+def data_to_db(cursor, conn_db, datalist):
     unix = time.time()
-    date = str(dt.datetime.fromtimestamp(unix).strftime("%d-%m-%Y %H:%M:%S"))
-    c.execute("INSERT INTO dataToStore (datestamp, name, value) VALUES (?, ?, ?)", (date, str(data_list[1]), int(data_list[2])))
-    conn.commit()
+    date = str(dt.datetime.fromtimestamp(unix).strftime(DATE_FORMAT))
+    cursor.execute("INSERT INTO Mittaukset VALUES (?, ?, ?, ?)", (str(datalist[1]), date,
+                                                                  int(datalist[2]), float(datalist[3])))
+    conn_db.commit()
 
 
 # Lahetetaan annetun laitteen kayttajalle email:
 def send_email():
-    sender = ''
     receiver = ''  # haetaan SQL subquerylla kayttaen funktiolle annettuja parametreja (laiteId ja aika)
-    password = ''
-    header = 'To:' + receiver + '\n' + 'From: ' + sender + '\n' + 'Subject:WARNING! \n'
+    header = 'To:' + receiver + '\n' + 'From: ' + SENDER + '\n' + 'Subject:WARNING! \n'
     message = header + "\nMoi!\nThis is a test message\nBest Regards."
 
     try:
         emailserver = smtplib.SMTP("smtp.gmail.com", 587)
         emailserver.starttls()
-        emailserver.login(sender, password)
-        emailserver.sendmail(sender, receiver, message)
+        emailserver.login(SENDER, PASSWD)
+        emailserver.sendmail(SENDER, receiver, message)
         emailserver.close()
         print("Mail sent")
     except:
         print("Failed to send mail")
         logger.debug("Failed to send mail")
 
+
+# Soitetaan annetun laitteen kayttajalle Twilion API:a kayttaen:
+def call_user():
+    client = Client(ACCOUNT_SID, AUTH_TOKEN)
+    call = client.calls.create(to='', from_=TWLO_NUM, url=TWLO_URL)  # to= Haetaan laitteen vuokraajan puh.numero tietokannasta
+    logger.debug(call.sid)
+
 # main funktio:
 if __name__ == '__main__':
 
+    CreateDB.init_db()  # Luo tietokannan jos sita ei ole
     try:
         sokettis = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     except OSError as err:
@@ -64,8 +79,8 @@ if __name__ == '__main__':
         logger.critical(err)
         sys.exit()
 
-    server_ip = socket.gethostbyname("")
-    server_address = (server_ip, 5555)
+    server_ip = socket.gethostbyname(HOSTNAME)
+    server_address = (server_ip, PORT)
 
     try:
         sokettis.bind(server_address)
@@ -82,7 +97,7 @@ if __name__ == '__main__':
         connection, client_address = sokettis.accept()
         print("Got a connection from: " + str(client_address[0]) + " " + str(client_address[1]))
 
-        connection.settimeout(5)
+        connection.settimeout(5)  # Katkaisee yhteyden clienttiin jos dataa ei vastaan oteta x sekuntiin. Odottaa uutta yhteytta taman jalkeen.
 
         try:
             data = connection.recv(4096)
@@ -90,14 +105,13 @@ if __name__ == '__main__':
             print("Data from client: " + data)
 
             # Pilkotaan vastaan otettu merkkijono listaan:
-            data_lista = data.split(",")
+            data_list = data.split(",")
 
             # Siirretaan listan alkiot tietokantaan, jonka jalkeen suljetaan yhteydet:
-            if str(data_lista[0]) == check:
-                conn = sqlite3.connect('testi.db')
+            if str(data_list[0]) == check:
+                conn = sqlite3.connect('PROTO.db')
                 c = conn.cursor()
-                create_table()
-                data_tietokantaan(data_lista)
+                data_to_db(c, conn, data_list)
                 print("Data saved, closing connection")
                 logger.debug("Data saved")
                 c.close()
@@ -107,6 +121,7 @@ if __name__ == '__main__':
                 print("Wrong data, closing connection")
                 connection.close()
 
+        # Virheiden hallintaa:
         except socket.timeout:
             logger.debug("Timeout")
             connection.close()
