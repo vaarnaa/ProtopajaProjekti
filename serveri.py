@@ -79,12 +79,10 @@ def send_sms():
     logger.debug("Message sent")
 
 
-# main funktio:
-def main():
-
-    CreateDB.init_db()  # Luo tietokannan jos sita ei ole
+# Funktio luo TCP/IP soketin ja palauttaa sen:
+def init_server():
     try:
-        sokettis = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        soketti = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     except OSError as err:
         print("Failed to create socket: {0}".format(err))
         logger.critical(err)
@@ -94,19 +92,28 @@ def main():
     server_address = (server_ip, PORT)
 
     try:
-        sokettis.bind(server_address)
+        soketti.bind(server_address)
     except OSError as err:
         print("Failed to bind socket: {0}".format(err))
         logger.critical(err)
         sys.exit()
 
-    sokettis.listen(5)
+    soketti.listen(5)
+    return soketti
+
+
+# main funktio:
+def main():
+
+    CreateDB.init_db()  # Luo tietokannan jos sita ei ole
+    soket = init_server()
 
     while True:
 
         print("Waiting for connection..")
-        connection, client_address = sokettis.accept()
+        connection, client_address = soket.accept()
         print("Got a connection from: " + str(client_address[0]) + " " + str(client_address[1]))
+        logger.debug("Got a connection from: " + str(client_address[0]) + " " + str(client_address[1]))
 
         connection.settimeout(5)  # Katkaisee yhteyden clienttiin jos dataa ei vastaan oteta x sekuntiin. Odottaa uutta yhteytta taman jalkeen.
 
@@ -152,6 +159,7 @@ def main():
             print("Failed to split data: {0}".format(err))
             logger.error(err)
             connection.close()
-            
+
+
 if __name__ == '__main__':
     main()
