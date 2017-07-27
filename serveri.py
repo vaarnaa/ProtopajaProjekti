@@ -1,6 +1,9 @@
 # Serveri.py file
 
-"""Testattu Python 3.5:lla. Vaatii Python 3.3(?) tai sita uudemman version."""
+""" Vaatii Python 3.3(?) tai sita uudemman version.
+
+
+"""
 
 # Standard libraries:
 import socket
@@ -11,14 +14,14 @@ import time
 import smtplib
 import logging
 
-# pip install twilio
+# Tekstiviestin lahetys ja puhelun soittaminen:
 from twilio.rest import Client
 
-# Omasta tiedostosta:
-from Credentials import PASSWD, SENDER  # Gmail-kayttajan tiedot
-from Credentials import ACCOUNT_SID, AUTH_TOKEN, TWLO_NUM, TWLO_URL  # Twilio-kayttajan tiedot
-from Credentials import HOSTNAME, PORT
-from Credentials import CHECK  # Vastaanotettavan datan tarkastus
+# Omista tiedostoista:
+from topsecret import PASSWD, SENDER  # Gmail-kayttajan tiedot
+from topsecret import ACCOUNT_SID, AUTH_TOKEN, TWLO_NUM, TWLO_URL  # Twilio-kayttajan tiedot
+from topsecret import HOSTNAME, PORT
+from topsecret import CHECK  # Vastaanotettavan datan tarkastus
 import CreateDB  # Kaytetaan tietokannan luomiseen
 
 
@@ -64,8 +67,16 @@ def send_email():
 # Soitetaan annetun laitteen kayttajalle Twilion API:a kayttaen:
 def call_user():
     client = Client(ACCOUNT_SID, AUTH_TOKEN)
-    call = client.calls.create(to='', from_=TWLO_NUM, url=TWLO_URL)  # to= Haetaan laitteen vuokraajan puh.numero tietokannasta
-    logger.debug(call.sid)
+    call = client.calls.create(to='', from_=TWLO_NUM, url=TWLO_URL)  # to= Haetaan laitteen vastuuhenkilon puh.numero tietokannasta
+    logger.debug("Call sid:" + call.sid)
+
+
+# Lahetetaan tekstiviesti annetun laitteen kayttajalle Twilion API:a kayttaen
+def send_sms():
+    client = Client(ACCOUNT_SID, AUTH_TOKEN)
+    message = 'Hello!'
+    client.messages.create(to='', from_=TWLO_NUM, body=message)  # to= Haetaan laitteen vastuuhenkilon puh.numero tietokannasta
+    logger.debug("Message sent")
 
 
 # main funktio:
@@ -126,6 +137,10 @@ def main():
             logger.debug("Timeout")
             connection.close()
             print("NO DATA RECEIVED! TIMEOUT!")
+
+        except ConnectionError as err:
+            print("Connection Error: {0}".format(err))
+            logger.error(err)
 
         except UnicodeError as err:
             print("Failed to decode data: {0}".format(err))
