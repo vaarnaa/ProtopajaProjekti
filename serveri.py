@@ -43,6 +43,8 @@ def data_to_db(cursor, conn_db, datalist):
     date = str(dt.datetime.fromtimestamp(unix).strftime(DATE_FORMAT))  # datetime-objekti
     cursor.execute("INSERT INTO Mittaukset VALUES (?, ?, ?, ?)", (str(datalist[1]), date,
                                                                   int(datalist[2]), float(datalist[3])))
+
+    cursor.execute("UPDATE Laitteet SET kaytot = kaytot + 1 WHERE numero = ?", (str(datalist[1])))
     conn_db.commit()
 
 
@@ -50,7 +52,6 @@ def data_to_db(cursor, conn_db, datalist):
 def send_email(cursor, conn_db, device_id):
     unix = time.time()
     date = str(dt.datetime.fromtimestamp(unix).strftime(DATE_FORMAT))  # datetime-objekti
-
     cursor.execute('SELECT asiakasSposti FROM Vuokraukset WHERE laiteNum=? AND ? BETWEEN alkuaika AND loppuaika',
                    (device_id, date))
     receiver = cursor.fetchone()[0]
@@ -71,18 +72,18 @@ def send_email(cursor, conn_db, device_id):
         logger.debug("Failed to send mail")
 
 
-# Soitetaan annetun laitteen kayttajalle Twilion API:a kayttaen:
-def call_user():
+# Soitetaan laitteen vastuuhenkilolle Twilion API:a kayttaen:
+def call_user(phone_num):
     client = Client(ACCOUNT_SID, AUTH_TOKEN)
-    call = client.calls.create(to='', from_=TWLO_NUM, url=TWLO_URL)  # to= Haetaan laitteen vastuuhenkilon puh.numero tietokannasta
+    call = client.calls.create(to=phone_num, from_=TWLO_NUM, url=TWLO_URL)
     logger.debug("Call sid:" + call.sid)
 
 
-# Lahetetaan tekstiviesti annetun laitteen kayttajalle Twilion API:a kayttaen
-def send_sms():
+# Lahetetaan tekstiviesti kayttajalle Twilion API:a kayttaen
+def send_sms(phone_num):
     client = Client(ACCOUNT_SID, AUTH_TOKEN)
     message = 'Hello!'
-    client.messages.create(to='', from_=TWLO_NUM, body=message)  # to= Haetaan laitteen vastuuhenkilon puh.numero tietokannasta
+    client.messages.create(to=phone_num, from_=TWLO_NUM, body=message)
     logger.debug("Message sent")
 
 
@@ -129,8 +130,7 @@ def main():
             data = data.decode()
             print("Data from client: " + data)
 
-            # Pilkotaan vastaan otettu merkkijono listaan:
-            data_list = data.split(",")
+            data_list = data.split(",")  # Pilkotaan vastaanotettu merkkijono listaan
 
             # Siirretaan listan alkiot tietokantaan, jonka jalkeen suljetaan yhteydet:
             if str(data_list[0]) == CHECK:
@@ -140,7 +140,7 @@ def main():
                 print("Data saved, closing connection to client")
                 logger.debug("Data saved")
 
-                if str(data_list[2]) != 0:  # jos suodatin on tukossa
+                if int(data_list[2]) != 0:  # jos suodatin on tukossa
                     send_email(c, conn, data_list[1])
 
                 c.close()
