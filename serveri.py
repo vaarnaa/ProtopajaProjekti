@@ -32,7 +32,7 @@ LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
 logging.basicConfig(filename="logfile.log",
                     level=logging.DEBUG,
                     format=LOG_FORMAT,
-                    datefmt=DATE_FORMAT)  # filemode = 'w'
+                    datefmt=DATE_FORMAT)  # filemode = 'w' overwrites the file if the file exists. If the file does not exist, creates a new file for writing.
 
 logger = logging.getLogger()
 
@@ -40,17 +40,23 @@ logger = logging.getLogger()
 # Asettaa annetun listan alkiot tietokannan Mittaukset-taulukkoon:
 def data_to_db(cursor, conn_db, datalist):
     unix = time.time()
-    date = str(dt.datetime.fromtimestamp(unix).strftime(DATE_FORMAT))
+    date = str(dt.datetime.fromtimestamp(unix).strftime(DATE_FORMAT))  # datetime-objekti
     cursor.execute("INSERT INTO Mittaukset VALUES (?, ?, ?, ?)", (str(datalist[1]), date,
                                                                   int(datalist[2]), float(datalist[3])))
     conn_db.commit()
 
 
-# Lahetetaan annetun laitteen kayttajalle email:
-def send_email():
-    receiver = ''  # haetaan SQL subquerylla kayttaen funktiolle annettuja parametreja (laiteId ja aika)
+# Lahetetaan annetun laitteen vastuuhenkilolle email:
+def send_email(cursor, conn_db, device_id):
+    unix = time.time()
+    date = str(dt.datetime.fromtimestamp(unix).strftime(DATE_FORMAT))  # datetime-objekti
+
+    cursor.execute('SELECT asiakasSposti FROM Vuokraukset WHERE laiteNum=? AND ? BETWEEN alkuaika AND loppuaika',
+                   (device_id, date))
+    receiver = cursor.fetchone()[0]
+
     header = 'To:' + receiver + '\n' + 'From: ' + SENDER + '\n' + 'Subject:WARNING! \n'
-    message = header + "\nMoi!\nThis is a test message\nBest Regards."
+    message = header + "\nMoi!\nThis is a test message\nBest Regards, Proto Dev Team."
 
     try:
         emailserver = smtplib.SMTP("smtp.gmail.com", 587)
@@ -59,6 +65,7 @@ def send_email():
         emailserver.sendmail(SENDER, receiver, message)
         emailserver.close()
         print("Mail sent")
+        logger.debug("Mail sent")
     except:
         print("Failed to send mail")
         logger.debug("Failed to send mail")
@@ -115,7 +122,7 @@ def main():
         print("Got a connection from: " + str(client_address[0]) + " " + str(client_address[1]))
         logger.debug("Got a connection from: " + str(client_address[0]) + " " + str(client_address[1]))
 
-        connection.settimeout(5)  # Katkaisee yhteyden clienttiin jos dataa ei vastaan oteta x sekuntiin. Odottaa uutta yhteytta taman jalkeen.
+        connection.settimeout(15)  # Katkaisee yhteyden clienttiin jos dataa ei vastaan oteta x sekuntiin. Odottaa uutta yhteytta taman jalkeen.
 
         try:
             data = connection.recv(4096)
@@ -130,14 +137,19 @@ def main():
                 conn = sqlite3.connect('PROTO.db')
                 c = conn.cursor()
                 data_to_db(c, conn, data_list)
-                print("Data saved, closing connection")
+                print("Data saved, closing connection to client")
                 logger.debug("Data saved")
+
+                if str(data_list[2]) != 0:  # jos suodatin on tukossa
+                    send_email(c, conn, data_list[1])
+
                 c.close()
                 conn.close()
                 connection.close()
             else:
                 print("Wrong data, closing connection")
                 connection.close()
+
 
         # Virheiden hallintaa:
         except socket.timeout:
