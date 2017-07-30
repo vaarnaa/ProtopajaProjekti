@@ -2,7 +2,6 @@
 
 """ Vaatii Python 3.3(?) tai sita uudemman version.
 
-
 """
 
 # Standard libraries:
@@ -32,7 +31,7 @@ LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
 logging.basicConfig(filename="logfile.log",
                     level=logging.DEBUG,
                     format=LOG_FORMAT,
-                    datefmt=DATE_FORMAT)  # filemode = 'w' overwrites the file if the file exists. If the file does not exist, creates a new file for writing.
+                    datefmt=DATE_FORMAT)  # filemode = 'w' overwrites the file if the file exists
 
 logger = logging.getLogger()
 
@@ -48,16 +47,21 @@ def data_to_db(cursor, conn_db, datalist):
     conn_db.commit()
 
 
-# Lahetetaan annetun laitteen vastuuhenkilolle email:
-def send_email(cursor, conn_db, device_id):
+# Hakee tietokannasta vastuuhenkilon valitseman ilmoitustavan, spostin ja puh. numeron. Palauttaa ne tuplena.
+def find_preference(cursor, conn_db, device_id):
     unix = time.time()
     date = str(dt.datetime.fromtimestamp(unix).strftime(DATE_FORMAT))  # datetime-objekti
-    cursor.execute('SELECT asiakasSposti FROM Vuokraukset WHERE laiteNum=? AND ? BETWEEN alkuaika AND loppuaika',
-                   (device_id, date))
-    receiver = cursor.fetchone()[0]
+    cursor.execute(
+        "SELECT ilmoitusTila, sposti, puh FROM Asiakkaat WHERE nimi IN (SELECT asiakasNimi FROM Vuokraukset WHERE laiteNum=? AND ? BETWEEN alkuaika AND loppuaika)",
+        (device_id, date))
+    preference = cursor.fetchone()
+    return preference  # tuple: (ilmoitustila, sposti, puh)
 
+
+# Lahetetaan annetun laitteen vastuuhenkilolle email:
+def send_email(receiver):
     header = 'To:' + receiver + '\n' + 'From: ' + SENDER + '\n' + 'Subject:WARNING! \n'
-    message = header + "\nMoi!\nThis is a test message\nBest Regards, Proto Dev Team."
+    message = header + "\nMoi!\n\nThis is a test message\n\nBest Regards,\nProto Dev Team."
 
     try:
         emailserver = smtplib.SMTP("smtp.gmail.com", 587)
@@ -79,7 +83,7 @@ def call_user(phone_num):
     logger.debug("Call sid:" + call.sid)
 
 
-# Lahetetaan tekstiviesti kayttajalle Twilion API:a kayttaen
+# Lahetetaan tekstiviesti kayttajalle Twilion API:a kayttaen:
 def send_sms(phone_num):
     client = Client(ACCOUNT_SID, AUTH_TOKEN)
     message = 'Hello!'
@@ -88,7 +92,7 @@ def send_sms(phone_num):
 
 
 # Funktio luo TCP/IP soketin ja palauttaa sen:
-def init_server():
+def init_server(hostname, port):
     try:
         soketti = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     except OSError as err:
@@ -96,8 +100,8 @@ def init_server():
         logger.critical(err)
         sys.exit()
 
-    server_ip = socket.gethostbyname(HOSTNAME)
-    server_address = (server_ip, PORT)
+    server_ip = socket.gethostbyname(hostname)
+    server_address = (server_ip, port)
 
     try:
         soketti.bind(server_address)
@@ -106,7 +110,7 @@ def init_server():
         logger.critical(err)
         sys.exit()
 
-    soketti.listen(5)
+    soketti.listen(5) # number of unaccepted connections that the system will allow before refusing new connections
     return soketti
 
 
@@ -114,7 +118,7 @@ def init_server():
 def main():
 
     CreateDB.init_db()  # Luo tietokannan jos sita ei ole
-    soket = init_server()
+    soket = init_server(HOSTNAME, PORT)
 
     while True:
 
@@ -123,7 +127,7 @@ def main():
         print("Got a connection from: " + str(client_address[0]) + " " + str(client_address[1]))
         logger.debug("Got a connection from: " + str(client_address[0]) + " " + str(client_address[1]))
 
-        connection.settimeout(15)  # Katkaisee yhteyden clienttiin jos dataa ei vastaan oteta x sekuntiin. Odottaa uutta yhteytta taman jalkeen.
+        connection.settimeout(15)  # Katkaisee yhteyden clienttiin jos dataa ei vastaanoteta x sekuntiin. Odottaa uutta yhteytta taman jalkeen.
 
         try:
             data = connection.recv(4096)
@@ -141,8 +145,14 @@ def main():
                 logger.debug("Data saved")
 
                 if int(data_list[2]) != 0:  # jos suodatin on tukossa
-                    send_email(c, conn, data_list[1])
-
+                    pref = find_preference(c, conn, data_list[1])  # Millaisen ilmoituksen vastuuhenkilo haluaa?
+                    if pref[0] == 0:
+                        send_email(pref[1])
+                    elif pref[0] == 1:
+                        connection.sendall(pref[2].encode())  # lahetetaan vastuuhenkilon puh numero MCU:lle tekstiviestin lahetysta varten
+                    elif pref[0] == 2:
+                        send_email(pref[1])
+                        connection.sendall(pref[2].encode())
                 c.close()
                 conn.close()
                 connection.close()
