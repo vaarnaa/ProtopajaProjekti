@@ -388,11 +388,11 @@ void setup() {
 
  	PORTD |= 1 << PD2; // Pinnin 2 ylösvetovastus päälle. Liitä tuulettimen sense johto pinniin 2.
 	EIMSK |= 1 << INT0; // External Interrupt MaSK register. Turns on INT0.
-	EICRA = 0b10; // External Interrupt Control Register. Trigger interrupt from falling edge.    SAMA SYNTAKSI PLEASE
+	EICRA = 0b10; // External Interrupt Control Register. Trigger interrupt from falling edge.
   
 	// Nopeutetaan AD-muunninta. Lisätietoja löytyy sivulta 319 datasheetistä:
 	// www.atmel.com/Images/Atmel-42735-8-bit-AVR-Microcontroller-ATmega328-328P_Datasheet.pdf
-	ADCSRA &= 0b11111000; // Nollataan rekisterin 3 vikaa bittiä. 								SAMA SYNTAKSI PLEASE
+	ADCSRA &= 0b11111000; // Nollataan rekisterin 3 vikaa bittiä.
 	ADCSRA |= 4; // Ja asetetaan 3 vikaa bittiä uudelleen. 4=nopein, 7=hitain (oletus).
 
 	DDRB |= 1 << PB1; // Data Direction Register B. Pin 9 output.
