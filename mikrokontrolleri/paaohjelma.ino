@@ -136,7 +136,7 @@ int analogLuku(){
 /*Jumittamaton ylinäytteistysfunktio käytönaikaiseen mittailuun, jottei nappulassa olisi viivettä.
   Funktio ottaa tuhansia mittauksia ja laskee niistä keskiarvon.
   Parametri 1 on pin, josta jännitettä mitataan.
-  Parametri 2 on ylinäytteistyksen resoluutio bitteinä.
+  Parametri 2 on otettavien näytteiden lukumäärä.
   Parametri 2 on valinnainen. Jos tätä parametria ei anneta, käytetään oletusarvoa.
   Palauttaa -1 jos ylinäytteistys on kesken.
   Palauttaa tuloksena luvun väliltä 0-1023 kun ylinäytteistys on valmis.
