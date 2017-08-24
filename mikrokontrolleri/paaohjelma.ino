@@ -1,23 +1,27 @@
-/* Tehtävää:
- Käyttötuntilaskuri? Töpselin irrotuksen havaitsemiseminen?
- Nollaustoiminnon non-blockaus, ettei nappulan tarkistelu keskeydy hetkeksikään.
- Jos antureita nollattaessa moottoria ei pysäytettäisi kokonaan, niin se olisi käyttövalmis paljon nopeammin.
- Läimäyskäynnistys.
- 1K sarjavastus nappulan pinniin PC3, ettei vahingossa pinni kärähdä, jos sen pistää outputiksi.
- Hälytysledin ja kajarin käskeminen yhdellä kertaa I2Cllä, eikä vuoron perään.
- Toisen suodattimen mahdollinen keltainen valo jäätävä päälle hälytyksen ajaksi?
- Antureilla kestää noin 5 s lämmetä koodin uppauksen jälkeen.
- Joku fiksu nollaus 5 s virtojen kytkemisen jälkeen.
- Lämpenemisaika voi olla pidempikin, vaikka minuutteja, jos anturit ovat kylmiä.
- Antureiden viilentäminen kylmäkallella laskee niiden painelukemat 10 minuutissa
- negatiivisiin lukemiin -5, -19 ja -6 Pa. Alussa lukemat olivat 0 Pa.*/
+// 3 analogista paineanturia, SIM900 ja MCP23017. Tehty Arduino IDE:ssä.
 
- 
-// 3 analogista paineanturia ja SIM900 ja MCP23017
-#include <EEPROM.h>
+/* Tehtävää:
+Käyttötuntilaskuri? Töpselin irrotuksen havaitsemiseminen?
+Nollaustoiminnon non-blockaus, ettei nappulan tarkistelu keskeydy hetkeksikään.
+Jos antureita nollattaessa moottoria ei pysäytettäisi kokonaan, niin se olisi käyttövalmis paljon nopeammin.
+sim_alustus() funktion viiveen sijaan uusi komento lähetettäisiin heti,
+	kun GSM-moduuli on kuitannut edellisen saamansa komennon.
+Läimäyskäynnistys.
+1K sarjavastus nappulan pinniin PC3, ettei vahingossa pinni kärähdä, jos sen pistää outputiksi.
+Hälytysledin ja kajarin käskeminen yhdellä kertaa I2Cllä, eikä vuoron perään.
+Toisen suodattimen mahdollinen keltainen valo jäätävä päälle hälytyksen ajaksi?
+Antureilla kestää noin 5 s lämmetä koodin uppauksen jälkeen.
+	Joku fiksu nollaus 5 s virtojen kytkemisen jälkeen.
+	Lämpenemisaika voi olla pidempikin, vaikka minuutteja, jos anturit ovat kylmiä.
+	Antureiden viilentäminen kylmäkallella laskee niiden painelukemat 10 minuutissa
+	negatiivisiin lukemiin -5, -19 ja -6 Pa. Alussa lukemat olivat 0 Pa.*/
+
+
+// Kirjastot
+#include <EEPROM.h> // Kierroslaskurin ja lennosta muutettavien muuttujien tallennus.
 #include <PID_v1.h> // https://github.com/br3ttb/Arduino-PID-Library
-#include <SoftwareSerial.h>
-#include <Wire.h>
+#include <SoftwareSerial.h> // Kommunikaatio GSM-moduulille.
+#include <Wire.h> // Kommunikaatio ledeille ja kaiuttimelle.
 
 
 // PID muuttujat:
