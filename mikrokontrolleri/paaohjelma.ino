@@ -1,8 +1,7 @@
 /* Tehtävää:
- SIM900 lähetysfunktion kutsuminen automaattisesti jossain kohtaa koodia ja datan lähetys serverille.
  Käyttötuntilaskuri? Töpselin irrotuksen havaitsemiseminen?
  Nollaustoiminnon non-blockaus, ettei nappulan tarkistelu keskeydy hetkeksikään.
- Jos antureita nollattaessa moottoria ei pysäyttäisi kokonaan, niin se olisi käyttövalmis paljon nopeammin.
+ Jos antureita nollattaessa moottoria ei pysäytettäisi kokonaan, niin se olisi käyttövalmis paljon nopeammin.
  Läimäyskäynnistys.
  1K sarjavastus nappulan pinniin PC3, ettei vahingossa pinni kärähdä, jos sen pistää outputiksi.
  Hälytysledin ja kajarin käskeminen yhdellä kertaa I2Cllä, eikä vuoron perään.
