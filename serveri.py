@@ -1,6 +1,6 @@
 # Serveri.py file
 
-""" Vaatii Python 3.3(?) tai sita uudemman version.
+""" Vaatii Python 3.3(?) tai sita uudemman version. Testattu 3.5:lla.
 
 """
 
@@ -14,18 +14,19 @@ import smtplib
 import logging
 
 # Tekstiviestin lahetys ja puhelun soittaminen:
-from twilio.rest import Client
+from twilio.rest import Client  # Twilion tekstiviesti API ei vielä Suomessa, mutta tulossa pian(?).
+# Asennus: pip install twilio       https://www.twilio.com/docs/libraries/python
 
 # Omista tiedostoista:
 from topsecret import PASSWD, SENDER  # Gmail-kayttajan tiedot
 from topsecret import ACCOUNT_SID, AUTH_TOKEN, TWLO_NUM, TWLO_URL  # Twilio-kayttajan tiedot
 from topsecret import HOSTNAME, PORT
 from topsecret import CHECK  # Vastaanotettavan datan tarkastus
-import CreateDB  # Kaytetaan tietokannan luomiseen
+# import CreateDB  # Kaytetaan tietokannan luomiseen
 
 
 # Loggauksen formaatti:
-DATE_FORMAT = '%Y-%m-%d %H:%M:%S'  # Vuosi-kuukausi-paiva
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S'  # Vuosi-kuukausi-paiva Tunti:minuutit:sekunnit
 LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
 
 logging.basicConfig(filename="logfile.log",
@@ -36,11 +37,11 @@ logging.basicConfig(filename="logfile.log",
 logger = logging.getLogger()
 
 
-# Asettaa annetun listan alkiot tietokannan Mittaukset-taulukkoon:
+# Asettaa annetun listan alkiot tietokannan Mittaukset-taulukkoon ja paivittaa laitteeen kayttokerrat Laitteet-taulukkoon:
 def data_to_db(cursor, conn_db, datalist):
     unix = time.time()
     date = str(dt.datetime.fromtimestamp(unix).strftime(DATE_FORMAT))  # datetime-objekti
-    cursor.execute("INSERT INTO Mittaukset VALUES (?, ?, ?, ?)", (str(datalist[1]), date,
+    cursor.execute("INSERT INTO Mittaukset VALUES (?, ?, ?, ?)", (int(datalist[1]), date,
                                                                   int(datalist[2]), float(datalist[3])))
 
     cursor.execute("UPDATE Laitteet SET kaytot = kaytot + 1 WHERE numero = ?", (str(datalist[1])))
@@ -58,10 +59,16 @@ def find_preference(cursor, conn_db, device_id):
     return preference  # tuple: (ilmoitustila, sposti, puh)
 
 
-# Lahetetaan annetun laitteen vastuuhenkilolle email:
-def send_email(receiver):
-    header = 'To:' + receiver + '\n' + 'From: ' + SENDER + '\n' + 'Subject:WARNING! \n'
-    message = header + "\nMoi!\n\nThis is a test message\n\nBest Regards,\nProto Dev Team."
+# Lahetetaan annetun laitteen vastuuhenkilolle email suodattimien vaihdon tarpeesta:
+def send_email(receiver, device_id, filter_status):
+    if int(filter_status) == 1:
+        filter = 'the coarse filter'
+    elif int(filter_status) == 2:
+        filter = 'the fine filter'
+    else:
+        filter = 'both filters'
+    header = 'To:' + receiver + '\n' + 'From: ' + SENDER + '\n' + 'Subject:Filters Clogged! \n'
+    message = header + "\nHello!\n\nPlease change " + filter + " of the device number " + device_id + "!\n\nBest Regards,\nProto Dev Team."
 
     try:
         emailserver = smtplib.SMTP("smtp.gmail.com", 587)
@@ -76,14 +83,14 @@ def send_email(receiver):
         logger.debug("Failed to send mail")
 
 
-# Soitetaan laitteen vastuuhenkilolle Twilion API:a kayttaen:
+# Soittaa nauhoitetun puhelun laitteen vastuuhenkilolle Twilion API:a kayttaen:
 def call_user(phone_num):
     client = Client(ACCOUNT_SID, AUTH_TOKEN)
     call = client.calls.create(to=phone_num, from_=TWLO_NUM, url=TWLO_URL)
     logger.debug("Call sid:" + call.sid)
 
 
-# Lahetetaan tekstiviesti kayttajalle Twilion API:a kayttaen:
+# Lahetetaan tekstiviesti laitteen vastuuhenkilolle Twilion API:a kayttaen:
 def send_sms(phone_num):
     client = Client(ACCOUNT_SID, AUTH_TOKEN)
     message = 'Hello!'
@@ -100,8 +107,7 @@ def init_server(hostname, port):
         logger.critical(err)
         sys.exit()
 
-    server_ip = socket.gethostbyname(hostname)
-    server_address = (server_ip, port)
+    server_address = (hostname, port)
 
     try:
         soketti.bind(server_address)
@@ -110,14 +116,14 @@ def init_server(hostname, port):
         logger.critical(err)
         sys.exit()
 
-    soketti.listen(5) # number of unaccepted connections that the system will allow before refusing new connections
+    soketti.listen(5)  # number of unaccepted connections that the system will allow before refusing new connections
     return soketti
 
 
 # main funktio:
 def main():
 
-    CreateDB.init_db()  # Luo tietokannan jos sita ei ole
+    # CreateDB.init_db()  # Luo tietokannan jos sita ei ole
     soket = init_server(HOSTNAME, PORT)
 
     while True:
@@ -137,7 +143,7 @@ def main():
             data_list = data.split(",")  # Pilkotaan vastaanotettu merkkijono listaan
 
             # Siirretaan listan alkiot tietokantaan, jonka jalkeen suljetaan yhteydet:
-            if str(data_list[0]) == CHECK:
+            if str(data_list[0]) == CHECK:  # Tarkastetaan että data on meidan laitteesta
                 conn = sqlite3.connect('PROTO.db')
                 c = conn.cursor()
                 data_to_db(c, conn, data_list)
@@ -147,11 +153,11 @@ def main():
                 if int(data_list[2]) != 0:  # jos suodatin on tukossa
                     pref = find_preference(c, conn, data_list[1])  # Millaisen ilmoituksen vastuuhenkilo haluaa?
                     if pref[0] == 0:
-                        send_email(pref[1])
+                        send_email(pref[1], data_list[1], data_list[2])
                     elif pref[0] == 1:
                         connection.sendall(pref[2].encode())  # lahetetaan vastuuhenkilon puh numero MCU:lle tekstiviestin lahetysta varten
                     elif pref[0] == 2:
-                        send_email(pref[1])
+                        send_email(pref[1], data_list[1], data_list[2])
                         connection.sendall(pref[2].encode())
                 c.close()
                 conn.close()
@@ -159,7 +165,6 @@ def main():
             else:
                 print("Wrong data, closing connection")
                 connection.close()
-
 
         # Virheiden hallintaa:
         except socket.timeout:
