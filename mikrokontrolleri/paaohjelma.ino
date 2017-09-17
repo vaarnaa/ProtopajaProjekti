@@ -182,12 +182,12 @@ float ylinaytteista(uint8_t pin, const uint16_t nayteLukumaara = 3000){
 float ylinaytteista_nollaus(uint8_t pin, const uint8_t bits = 7){
 	if (pin >= 14) pin -= 14; // allow for channel or pin numbers
 	ADMUX = 1 << REFS0 | pin & 0x07; // MUX mittauspinniin.
-  const uint32_t nayteLukumaara = 1UL << (bits * 2);
-  uint32_t summa = 0; // Summataan kaikki näytteet yhteen.
-  for (uint32_t i = 0; i < nayteLukumaara; i++) {
-	  summa += analogLuku();
-  }
-  return (float)(summa >> bits) / (1 << bits); // Skaalataan summa luvuksi välille 0-1023.
+	const uint32_t nayteLukumaara = 1UL << (bits * 2);
+	uint32_t summa = 0; // Summataan kaikki näytteet yhteen.
+	for (uint32_t i = 0; i < nayteLukumaara; i++) {
+		summa += analogLuku();
+	}
+	return (float)(summa >> bits) / (1 << bits); // Skaalataan summa luvuksi välille 0-1023.
 }
 
 
