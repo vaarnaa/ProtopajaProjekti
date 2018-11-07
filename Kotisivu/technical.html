@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"Consair Proto"</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link href="https://fonts.googleapis.com/css?family=Spectral|Lato|Open+Sans" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body id="page2">
+<div class="technical">
+    <div class="head">
+        <span id="technical">Technical details</span>
+    </div>
+    <div class="section-last section-white">
+        <div id="mechanics-details">
+            <h2>Mechanics</h2>
+            <p>The floor area is valuable on construction sites, so minimizing it was one of the goals of the mechanical
+                design. The coarse and fine filters are positioned upright to save floor area. A 3D computer model was
+                created to determine the dimensions for the enclosure. The enclosure is glued together from pieces of
+                plywood and the joints are further strengthened with angle irons. Steel hinges and latches are screwed
+                to the enclosure to hold the hatches in place.
+            </p>
+            <p>Three pressure sensors were positioned inside the enclosure to measure the pressure drop of the two
+                filters and the speed of the air flow. Analog monolithic differential pressure
+                sensors with piezoresistive transducers were chosen because of their excellent resolution and ease of use.
+            </p>
+            <div class="wrapper">
+                <div class="gallery-items">
+                    <div id="malli">
+                        <img src="kotelo_malli.jpg" style="width: 100%">
+                    </div>
+                    <div class="tech-image">
+                        <img src="kotelo.jpg" style="width: 100%; border-radius: 10px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="border"></div>
+        <div id="microcontroller-details">
+            <h2>Microcontroller</h2>
+            <div class="technical-text">
+                <p>We chose ATmega328p microcontroller because it’s easy to use and has the required analog and digital
+                    pins needed for the sensors and controlling the motor.
+                </p>
+            </div>
+            <div class="technical-image">
+                <!--<a target="_blank" href="piirilevy_compressed.png"><img src="piirilevy_compressed.png" style="width: 100%; margin: 0; padding: 0"></a>-->
+                <img src="piiri.svg" style="width: 100%; margin: 0; padding: 0;"></a>
+            </div>
+        </div>
+        <div class="border"></div>
+        <div id="pid-control">
+            <h2>PID Control</h2>
+            <p>The fan speed is controlled by the code-based <a href="https://en.wikipedia.org/wiki/PID_controller">PID controller</a> which operates by a feedback mechanism.
+                The error value between the desired and the measured fan speed and the PID coefficients are used to guide
+                the speed towards the desired value.
+            </p>
+            <p>We use an unmodified version of a publicly available <a href="https://github.com/br3ttb/Arduino-PID-Library/blob/master/PID_v1.h">PID library</a> because we considered it was good enough. The PID coefficients were determined experimentally using
+                <a href="https://en.wikipedia.org/wiki/Ziegler%E2%80%93Nichols_method">Ziegler–Nichols method.</a>
+            </p>
+            <div style="width: 100%; margin: 0 auto" align="center">
+                <!--<img id="PID-image2" src="PID_diagram_2.svg">-->
+                <!--<img id="PID-image" src="PID_diagram.svg">-->
+                <img id="PID-image" src="PID_diagram_6.svg">
+            </div>
+        </div>
+        <div class="border"></div>
+        <div id="networking-details">
+            <h2>Networking</h2>
+            <p>When the device is turned on, that information is sent to the server where the data is stored in the database. Information about the degree of clogging of the filters
+                is also transmitted regularly. The party responsible for the device is informed via text message or email when the filters are clogged and need to be changed.
+            </p>
+            <p>The device is mainly used at construction sites and they rarely have a Wi-Fi connection. GSM module is the most practical solution for transferring data
+                from the device to the server. We chose SIM900 module because of a large user base and relative ease of use. The server was implemented
+                in Python for the same reasons.
+            </p>
+        </div>
+        <div class="call-to-action2">
+                <span><a href="index.html#learn-more">
+                    <i class="material-icons" style="vertical-align: -5px;">home</i>  Back</a></span>
+        </div>
+    </div>
+</div>
+
+<div class="copyright2">
+    <a href="/consair#team" style="display: inline-block;"><strong>&copy; Protopaja Team & </strong></a>
+    <a href="http://consair.fi/" target="_blank" style="display: inline-block;"> <strong>Consair Oy</strong></a>
+</div>
+
+</body>
+</html>

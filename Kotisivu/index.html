@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"Consair Proto"</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link href="https://fonts.googleapis.com/css?family=Spectral|Lato|Open+Sans" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+<label for="show-menu" class="show-menu"><i class="material-icons" style="vertical-align:middle;">menu</i></label>
+<input type="checkbox" id="show-menu" role="button">
+<nav class="menu">
+    <ul>
+        <li><a href="#project"><span>Project</span></a></li>
+        <li><a href="#team"><span>Team</span></a></li>
+        <li><a href="gallery.html"><span>Gallery</span></a></li>
+        <li><a id="github" href="https://github.com/Aleranta/PrototyyppiProjekti" target="_blank"><span>GitHub</span></a></li>
+    </ul>
+</nav>
+
+<div class="container2">
+    <div class="front-image">
+        <div class="header">
+            <h3>Consair Proto</h3>
+            <h4>Innovative dust control</h4>
+        </div>
+    </div>
+</div>
+
+<span class="anchor"></span>
+<div id="project" class="section-first section-blue">
+    <h1>Project</h1>
+    <p>The prototype was built in the summer 2017 at the Aalto University's Protopaja course in co-operation with Consair Oy.
+        Our goal was to develop a prototype for a local air cleaner with IoT capabilities. The primary purpose of the
+        device is to reduce construction workers exposure to waste particles while mixing mortar. Because devices
+        suitable for this purpose already exist, we wanted to design and build a device with improved features.
+
+    </p>
+    <div class="container3">
+        <div class="embed-container">
+            <iframe width="800" height="450"
+                    src="https://www.youtube.com/embed/NMffkGZqWls" frameborder='0' allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+</div>
+
+<div class="section section-white" align=center>
+    <div class="wrapper" align=center>
+        <h1>How it works</h1>
+        <br/>
+        <br/>
+        <br/>
+        <div class="container" align=center>
+            <img src="Kuvat/wrench.svg" style="width: 70px; height: 70px">
+            <h2>Mechanics</h2>
+            <p>The enclosure of the device was built of plywood with the help of a 3D model. The air flow enters through the air vent in
+                the front panel, passes through the filters in the middle and the fan in the rear of the device and
+                then exits through the roof outlet.</p>
+        </div>
+        <div class="container" align=center>
+            <img src="Kuvat/pcb.svg" style="width: 70px; height: 70px">
+            <h2>Microcontroller</h2>
+            <p>The operation of the device is controlled by the microcontroller. It reads the values ​​measured by the
+                pressure sensors and adjusts the fan speed based on the measurement results. The airflow passing through
+                the device is kept constant regardless of the degree of clogging of the filters.</p>
+        </div>
+        <div class="container" align="center">
+            <img src="Kuvat/signal2.svg" style="width: 70px; height: 70px">
+            <h2>PID Control</h2>
+            <p>The fan speed is controlled by a specific piece of software in the microcontroller. The
+                code-based PID controller adjusts the speed to the desired value based on the difference between
+                the measured and the desired speed.</p>
+        </div>
+        <div class="container"  align="center" id="learn-more">
+            <img src="Kuvat/cloud.svg" style="width: 70px; height: 70px;">
+            <h2>Networking</h2>
+            <p>While the device is in operation, the GSM module connects to the server and transmits information about the
+                status of the device. The server stores the data in the database. The person in charge of the device is informed
+                by email or text message if the filters are clogged.</p>
+        </div>
+        <div style="padding-top: 20px"></div>
+    </div>
+    <div class="call-to-action">
+                    <span><a href="technical.html">Learn More
+                        <i class="material-icons" style="vertical-align: -6px;">play_arrow</i></a></span>
+    </div>
+</div>
+
+<span class="anchor" id="team"></span>
+<div class="section-team section-blue" align=center>
+    <div class="wrapper2" align="center">
+        <h1>Team</h1>
+        <div class="portrait">
+            <div class="portrait-border1">
+                <div class="portrait-border2">
+                    <div class="portrait-border3">
+                        <img src="Kuvat/joel.jpg">
+                    </div>
+                </div>
+            </div>
+            <h2>Joel Tolonen</h2>
+            <p>Box design & air flow coding</p>
+        </div>
+        <div class="portrait">
+            <div class="portrait-border1">
+                <div class="portrait-border2">
+                    <div class="portrait-border3">
+                        <img src="Kuvat/aleksi_2.jpg">
+                    </div>
+                </div>
+            </div>
+            <h2>Aleksi Ranta-aho</h2>
+            <p>Project manager & IoT coding</p>
+        </div>
+        <div class="portrait">
+            <div class="portrait-border1">
+                <div class="portrait-border2">
+                    <div class="portrait-border3">
+                        <img src="Kuvat/miika_2.jpg">
+                    </div>
+                </div>
+            </div>
+            <h2>Miika Koivurinne</h2>
+            <p>Electronics design</p>
+        </div>
+        <div class="portrait">
+            <div class="portrait-border1">
+                <div class="portrait-border2">
+                    <div class="portrait-border3">
+                        <img src="Kuvat/antero_3.jpg">
+                    </div>
+                </div>
+            </div>
+            <h2>Antero Vaarnamo</h2>
+            <p>Website design & all-round coding</p>
+        </div>
+        <div class="portrait">
+            <div class="portrait-border1">
+                <div class="portrait-border2">
+                    <div class="portrait-border3">
+                        <img src="Kuvat/pauli_2.jpg">
+                    </div>
+                </div>
+            </div>
+            <h2>Pauli Paaso</h2>
+            <p>Box design & safety testing</p>
+        </div>
+    </div>
+</div>
+
+<div class="copyright">
+    <a href="/consair#team" style="display: inline-block;"><strong>&copy; Protopaja Team & </strong></a>
+    <a href="http://consair.fi/" target="_blank" style="display: inline-block;"><strong>Consair Oy</strong></a>
+</div>
+</body>
+
+</html>
